@@ -36,6 +36,9 @@ public class VendaService {
     @Autowired
     private MaquininhaRepository maquininhaRepository;
 
+    @Autowired
+    private MovimentacaoFiadoRepository movimentacaoFiadoRepository;
+
     @Transactional
     public Venda processarVenda(VendaRequestDTO request) {
         // 1. Validar se o Caixa está aberto
@@ -118,6 +121,16 @@ public class VendaService {
 
                 cliente.setSaldoDevedor(novoSaldoDevedor);
                 clienteRepository.save(cliente);
+
+                // Gerar histórico de débito no extrato do cliente
+                MovimentacaoFiado hist = new MovimentacaoFiado();
+                hist.setCliente(cliente);
+                hist.setVenda(venda);
+                hist.setDataMovimentacao(LocalDateTime.now());
+                hist.setTipo("DEBITO");
+                hist.setValor(pagDTO.getValorPago());
+                hist.setObservacao("Compra efetuada via cupom/venda #" + venda.getId());
+                movimentacaoFiadoRepository.save(hist);
             }
 
             // Lógica se for Cartão (Vincular à Maquininha)
