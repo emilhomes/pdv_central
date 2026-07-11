@@ -7,6 +7,7 @@ import com.centraldasbebidas.pdv_backend.model.*;
 import com.centraldasbebidas.pdv_backend.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -50,6 +51,7 @@ public class VendaService {
         venda.setDataHora(LocalDateTime.now());
         venda.setStatus("CONCLUIDA");
         venda.setCaixa(caixaAtivo);
+        venda.setOperador(getOperadorLogado()); // quem está logado registrando a venda
 
         if (request.getClienteId() != null) {
             Cliente cliente = clienteRepository.findById(request.getClienteId())
@@ -152,6 +154,11 @@ public class VendaService {
         }
 
         return venda;
+    }
+
+    private Operador getOperadorLogado() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.getPrincipal() instanceof Operador op) ? op : null;
     }
 
 }

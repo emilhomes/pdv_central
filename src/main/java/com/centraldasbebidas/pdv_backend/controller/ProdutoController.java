@@ -29,6 +29,16 @@ public class ProdutoController {
         return repository.findAll();
     }
 
+    // Produtos com estoque crítico (< 5 unidades) — endpoint leve, pensado
+    // pro banner de alerta do Dashboard (não precisa carregar o
+    // relatório inteiro só pra mostrar esse aviso).
+    // Nota: o mesmo limite (5) também é usado em RelatorioService — se
+    // mudar aqui, ajuste lá também.
+    @GetMapping("/estoque-critico")
+    public List<Produto> estoqueCritico() {
+        return repository.buscarEstoqueCritico(5);
+    }
+
     //Buscar produto por ID
     @GetMapping("/{id}")
     public ResponseEntity<Produto> buscarPorId(@PathVariable Long id) {

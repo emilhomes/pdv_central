@@ -36,4 +36,10 @@ public class Venda {
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
+    // Nullable de propósito: vendas registradas antes do login existir
+    // ficam sem operador vinculado, sem quebrar nada.
+    @ManyToOne
+    @JoinColumn(name = "operador_id")
+    private Operador operador;
+
 }

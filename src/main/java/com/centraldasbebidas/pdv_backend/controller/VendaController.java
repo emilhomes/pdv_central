@@ -24,9 +24,8 @@ public class VendaController {
             Venda vendaFinalizada = service.processarVenda(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(vendaFinalizada);
         } catch (RuntimeException e) {
-            // Captura as nossas regras de negócio (sem estoque, limite estourado, etc.) e envia o aviso para o app
+            e.printStackTrace(); // <-- Adicione isto para o Java confessar o problema no terminal!
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 }
