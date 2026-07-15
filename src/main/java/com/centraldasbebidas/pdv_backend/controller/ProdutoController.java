@@ -23,7 +23,10 @@ public class ProdutoController {
         return repository.save(produto);
     }
 
-    //Rota para LISTAR todos os produtos
+    //Rota para LISTAR todos os produtos (ativos E inativos — a tela de
+    // Estoque precisa ver os dois para poder reativar; quem só deve
+    // considerar produtos ativos, como o Caixa, filtra no app pelo campo
+    // "ativo" que já vem em cada produto)
     @GetMapping
     public List<Produto> listar() {
         return repository.findAll();
@@ -57,6 +60,9 @@ public class ProdutoController {
                     produtoExistente.setCusto(produtoAtualizado.getCusto());
                     produtoExistente.setPrecoVenda(produtoAtualizado.getPrecoVenda());
                     produtoExistente.setQuantidadeEstoque(produtoAtualizado.getQuantidadeEstoque());
+                    // "ativo" não é tocado aqui de propósito — a edição normal
+                    // de dados do produto não deve mexer nesse status; use os
+                    // endpoints /desativar e /reativar abaixo para isso.
 
                     Produto salvo = repository.save(produtoExistente);
                     return ResponseEntity.ok(salvo);
@@ -64,7 +70,32 @@ public class ProdutoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    //Excluir um produto
+    // Desativa o produto (soft delete) — some do Caixa, mas continua
+    // existindo no banco e no histórico de vendas/reposições.
+    @PutMapping("/{id}/desativar")
+    public ResponseEntity<Produto> desativar(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(produto -> {
+                    produto.setAtivo(false);
+                    return ResponseEntity.ok(repository.save(produto));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Reativa um produto desativado anteriormente.
+    @PutMapping("/{id}/reativar")
+    public ResponseEntity<Produto> reativar(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(produto -> {
+                    produto.setAtivo(true);
+                    return ResponseEntity.ok(repository.save(produto));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    //Excluir um produto DE VERDADE (continua existindo para produtos sem
+    // nenhum histórico — o banco recusa com erro se houver venda/reposição
+    // vinculada, e o app trata esse erro com uma mensagem amigável).
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
         return repository.findById(id)
